@@ -7,7 +7,7 @@ import random
 from database import get_session
 from models import Word, User
 from auth import get_current_db_user
-from schemas.quiz import QuizStartResponse, AnswerRequest, AnswerResponse, LeaderboardUser, QuestionSchema
+from schemas.quiz import QuizStartResponse, AnswerRequest, AnswerResponse, LeaderboardUser, QuestionSchema, UserStatsResponse
 from typing import List
 
 # Router oluşturuyoruz
@@ -100,4 +100,62 @@ def submit_answer(
         "correct_answer": word.en, # Doğru cevabı İngilizce olarak dönüyoruz standart olarak
         "user_score": user.total_score,
         "message": message
+    }
+
+@router.get("/stats", response_model=UserStatsResponse)
+def get_user_stats(
+    user: User = Depends(get_current_db_user),
+    session: Session = Depends(get_session)
+):
+    # Calculate Rank: Count users with higher score + 1
+    rank_statement = select(func.count()).where(User.total_score > user.total_score)
+    rank = session.exec(rank_statement).one() + 1
+    
+    # Calculate Total Players
+    total_players_statement = select(func.count()).select_from(User)
+    total_players = session.exec(total_players_statement).one()
+    
+    return {
+        "total_score": user.total_score,
+        "level": user.level,
+        "rank": rank,
+        "total_players": total_players
+    }
+
+from datetime import date
+from models import DailyStats
+
+@router.post("/finish")
+def finish_quiz(
+    user: User = Depends(get_current_db_user),
+    session: Session = Depends(get_session)
+):
+    today = date.today()
+    statement = select(DailyStats).where(DailyStats.user_id == user.id, DailyStats.date == today)
+    stats = session.exec(statement).first()
+    
+    if not stats:
+        stats = DailyStats(user_id=user.id, date=today, quizzes_completed=1) # İlk quiz
+    else:
+        stats.quizzes_completed += 1
+        
+    session.add(stats)
+    session.commit()
+    return {"message": "Daily stats updated", "today_completed": stats.quizzes_completed}
+
+@router.get("/daily_progress")
+def get_daily_progress(
+    user: User = Depends(get_current_db_user),
+    session: Session = Depends(get_session)
+):
+    today = date.today()
+    statement = select(DailyStats).where(DailyStats.user_id == user.id, DailyStats.date == today)
+    stats = session.exec(statement).first()
+    
+    completed = stats.quizzes_completed if stats else 0
+    target = 5 # Sabit hedef
+    
+    return {
+        "completed": completed,
+        "target": target
     }

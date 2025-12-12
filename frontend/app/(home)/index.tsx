@@ -1,41 +1,138 @@
+
 import { SignedIn, SignedOut, useUser } from '@clerk/clerk-expo'
-import { Link } from 'expo-router'
-import { Text, View, TouchableOpacity } from 'react-native'
-import SignOutButton from '@/components/SignOutButton'
+import { Link, useFocusEffect } from 'expo-router'
+import { Text, View, TouchableOpacity, ScrollView, Image } from 'react-native'
+import { SignOutButton } from '@/components/SignOutButton'
+import { Ionicons } from '@expo/vector-icons'
 import "@/global.css"
+import React, { useState, useCallback } from 'react'
+import { useApi } from '@/utils/api'
 
 export default function Page() {
   const { user } = useUser()
+  const { fetchWithAuth } = useApi()
+  const [dailyStats, setDailyStats] = useState({ completed: 0, target: 5 })
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchDailyStats()
+    }, [])
+  )
+
+  const fetchDailyStats = async () => {
+    try {
+      const data = await fetchWithAuth('/quiz/daily_progress')
+      if (data) setDailyStats(data)
+    } catch (e) {
+      console.log("Stats fetch error", e)
+    }
+  }
 
   return (
-    <View className="flex-1 justify-center items-center bg-white">
-      
-      <Text className='text-yellow-500 text-lg mb-5'>Merhaba</Text>
+    <ScrollView className="flex-1 bg-white">
+      {/* HEADER SECTION */}
+      <View className="bg-purple-700 pt-16 pb-10 px-6 rounded-b-[40px] shadow-xl">
+        <View className="flex-row justify-between items-center">
+          <View>
+            <Text className="text-purple-200 font-medium text-lg">Hoşgeldin,</Text>
+            <Text className="text-white font-bold text-3xl">
+              {user?.firstName || user?.emailAddresses[0].emailAddress.split('@')[0] || "Misafir"} 👋
+            </Text>
+          </View>
+          <View className="bg-purple-600 p-2 rounded-full border border-purple-500">
+            {user?.imageUrl ? (
+              <Image source={{ uri: user.imageUrl }} className="w-10 h-10 rounded-full" />
+            ) : (
+              <Ionicons name="person" size={24} color="white" />
+            )}
 
-      {/* --- QUIZ SAYFASINA GİDEN BUTON --- */}
-      <Link href="/quiz" asChild>
-        <TouchableOpacity className="bg-purple-600 px-8 py-4 rounded-xl shadow-lg">
-          <Text className="text-white font-bold text-lg">Testi Başlat</Text>
-        </TouchableOpacity>
-      </Link>
-
-      <SignedIn>
-        <Text className="mt-4">Hello {user?.emailAddresses[0].emailAddress}</Text>
-        <SignOutButton />
-      </SignedIn>
-      
-      <SignedOut>
-        <View className="mt-5 space-y-2">
-            <Link href="/(auth)/sign-in">
-              <Text className="text-blue-500">Sign in</Text>
-            </Link>
-            <Link href="/(auth)/sign-up">
-              <Text className="text-blue-500">Sign up</Text>
-            </Link>
+          </View>
         </View>
-      </SignedOut> 
-     
 
-    </View>
+        <View className="mt-8 bg-purple-800 p-4 rounded-2xl flex-row items-center justify-between border border-purple-600">
+          <View>
+            <Text className="text-purple-300 text-xs uppercase font-bold tracking-wider">Günlük Hedef</Text>
+            <View className="flex-row items-baseline mt-1">
+              <Text className="text-white font-extrabold text-2xl">{dailyStats.completed}/{dailyStats.target}</Text>
+              <Text className="text-purple-300 ml-1 text-sm">Quiz</Text>
+            </View>
+          </View>
+          <Ionicons name="flame" size={32} color={dailyStats.completed >= dailyStats.target ? "#22c55e" : "#fbbf24"} />
+        </View>
+      </View>
+
+      {/* CONTENT SECTION */}
+      <View className="px-6 mt-8 pb-10">
+        <Text className="text-gray-800 font-bold text-xl mb-4">Neler Yapalım?</Text>
+
+        <View className="flex-row flex-wrap justify-between">
+          {/* Start Quiz Card */}
+          <Link href="/quiz" asChild>
+            <TouchableOpacity className="w-[48%] bg-purple-50 p-5 rounded-3xl mb-4 border border-purple-100 items-center shadow-sm active:scale-95 transform transition">
+              <View className="bg-purple-100 p-4 rounded-full mb-3">
+                <Ionicons name="play" size={28} color="#9333ea" />
+              </View>
+              <Text className="text-gray-900 font-bold text-lg text-center">Quiz Başlat</Text>
+              <Text className="text-gray-500 text-xs text-center mt-1">Kelime bilgini sına</Text>
+            </TouchableOpacity>
+          </Link>
+
+          {/* Leaderboard Card (Placeholder) */}
+          <Link href="/leaderboard" asChild>
+            <TouchableOpacity className="w-[48%] bg-orange-50 p-5 rounded-3xl mb-4 border border-orange-100 items-center shadow-sm active:scale-95 transform transition">
+              <View className="bg-orange-100 p-4 rounded-full mb-3">
+                <Ionicons name="trophy" size={28} color="#ea580c" />
+              </View>
+              <Text className="text-gray-900 font-bold text-lg text-center">Liderlik</Text>
+              <Text className="text-gray-500 text-xs text-center mt-1">Sıralamanı gör</Text>
+            </TouchableOpacity>
+          </Link>
+
+          {/* Profile Card */}
+          <Link href="/stats" asChild>
+            <TouchableOpacity className="w-full bg-blue-50 p-5 rounded-3xl mb-4 border border-blue-100 flex-row items-center shadow-sm active:scale-95 transform transition">
+              <View className="bg-blue-100 p-4 rounded-full mr-4">
+                <Ionicons name="stats-chart" size={28} color="#2563eb" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-gray-900 font-bold text-lg">İstatistikler</Text>
+                <Text className="text-gray-500 text-xs">Gelişimini takip et</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#94a3b8" />
+            </TouchableOpacity>
+          </Link>
+        </View>
+
+        {/* AUTH ACTIONS */}
+        <View className="mt-6">
+          <SignedIn>
+            <View className="bg-gray-100 rounded-2xl p-4 flex-row justify-between items-center">
+              <Text className="text-gray-600 font-medium">Oturum Açık</Text>
+              <SignOutButton />
+            </View>
+          </SignedIn>
+
+          <SignedOut>
+            <View className="bg-gray-100 rounded-2xl p-6 items-center">
+              <Text className="text-gray-800 font-bold text-lg mb-2">Hesabın var mı?</Text>
+              <Text className="text-gray-500 text-center mb-6">İlerlemeni kaydetmek için giriş yapmalısın.</Text>
+
+              <Link href="/(auth)/sign-in" asChild>
+                <TouchableOpacity className="bg-black w-full py-4 rounded-xl items-center mb-3">
+                  <Text className="text-white font-bold">Giriş Yap</Text>
+                </TouchableOpacity>
+              </Link>
+
+              <Link href="/(auth)/sign-up" asChild>
+                <TouchableOpacity className="bg-white border border-gray-300 w-full py-4 rounded-xl items-center">
+                  <Text className="text-gray-900 font-bold">Kayıt Ol</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          </SignedOut>
+        </View>
+
+      </View>
+    </ScrollView>
   )
 }

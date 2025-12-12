@@ -22,7 +22,14 @@ class AnswerResponse(BaseModel):
     message: str
 
 class LeaderboardUser(BaseModel):
+    id: int
     username: str | None
     total_score: int
     level: str
+
+class UserStatsResponse(BaseModel):
+    total_score: int
+    level: str
+    rank: int
+    total_players: int
 

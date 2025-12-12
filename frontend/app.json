@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "clerk-expo-quickstart",
-    "slug": "clerk-expo-quickstart",
+    "name": "English Quiz App",
+    "slug": "english-quiz-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

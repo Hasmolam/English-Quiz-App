@@ -11,7 +11,10 @@ from routers import quiz
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Uygulama başlarken çalışır
-    SQLModel.metadata.create_all(engine)
+    try:
+        SQLModel.metadata.create_all(engine)
+    except Exception as e:
+        print(f"DB Init Error (Ignored for startup): {e}")
     yield
     # Uygulama kapanırken çalışır (gerekirse)
 
