@@ -46,7 +46,7 @@ Bu proje, İngilizce kelime öğrenme uygulaması için geliştirilmiş FastAPI 
 
 | Metot | Endpoint | Açıklama |
 |-------|----------|----------|
-| `GET` | `/quiz/start` | Quiz'i başlatır ve rastgele 5 kelime döndürür. |
+| `GET` | `/quiz/start` | Quiz'i başlatır. Her soru için kelime ve 4 şık (1 doğru, 3 yanlış) döndürür. |
 | `POST` | `/quiz/answer` | Kullanıcının cevabını kontrol eder ve puanı günceller. |
 | `GET` | `/quiz/leaderboard` | En yüksek puana sahip ilk 10 kullanıcıyı listeler. |
 

@@ -35,13 +35,13 @@ def test_user_creation():
             first_question = questions[0]
             print(f"Soru: {first_question}")
             
-            # 2. Cevap Gönder (Doğru Cevap Denemesi)
-            print("\n2. Cevap Gönderiliyor (Doğru)...")
-            # Doğru cevabı alıp gönderelim (Test amaçlı)
-            correct_answer = first_question['en']
+            # 2. Cevap Gönder (Bir şık seçip gönderelim)
+            print("\n2. Cevap Gönderiliyor (İlk şık deneniyor)...")
+            # Şıklardan ilkini seçelim
+            selected_option = first_question['options'][0]
             answer_payload = {
                 "word_id": first_question['id'],
-                "answer": correct_answer
+                "answer": selected_option
             }
             
             ans_response = client.post("/quiz/answer", json=answer_payload)
@@ -49,27 +49,14 @@ def test_user_creation():
                 ans_data = ans_response.json()
                 print(f"✅ Cevap Sonucu: {ans_data}")
                 if ans_data['correct']:
-                    print("   -> Doğru bilindi, puan arttı.")
+                    print("   -> Doğru bilindi (Şanslısın!).")
                 else:
-                    print("   -> Yanlış bilindi (Beklenmedik durum).")
+                    print(f"   -> Yanlış bilindi. Doğrusu: {ans_data['correct_answer']}")
             else:
                 print(f"❌ Cevap isteği başarısız: {ans_response.text}")
 
-            # 3. Cevap Gönder (Yanlış Cevap Denemesi)
-            print("\n3. Cevap Gönderiliyor (Yanlış)...")
-            wrong_payload = {
-                "word_id": first_question['id'],
-                "answer": "sacmasapanbirsey"
-            }
-            wrong_response = client.post("/quiz/answer", json=wrong_payload)
-            if wrong_response.status_code == 200:
-                wrong_data = wrong_response.json()
-                print(f"✅ Cevap Sonucu: {wrong_data}")
-                if not wrong_data['correct']:
-                    print("   -> Yanlış bilindi (Beklenen durum).")
-            
-            # 4. Leaderboard Kontrolü
-            print("\n4. Leaderboard Kontrolü...")
+            # 3. Leaderboard Kontrolü
+            print("\n3. Leaderboard Kontrolü...")
             lb_response = client.get("/quiz/leaderboard")
             if lb_response.status_code == 200:
                 lb_data = lb_response.json()

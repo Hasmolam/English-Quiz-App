@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select, desc
 from sqlalchemy.sql.expression import func
+import random
 
 # Diğer dosyalarımızdan import ediyoruz
 from database import get_session
 from models import Word, User
 from auth import get_current_db_user
-from schemas.quiz import QuizStartResponse, AnswerRequest, AnswerResponse, LeaderboardUser
+from schemas.quiz import QuizStartResponse, AnswerRequest, AnswerResponse, LeaderboardUser, QuestionSchema
 from typing import List
 
 # Router oluşturuyoruz
@@ -26,15 +27,45 @@ def start_quiz(
 ):
     print(f"User DB ID: {user.id}, Clerk ID: {user.clerk_id}")
 
-    # Kelimeleri veritabanından çekiyoruz
+    # 1. Sorulacak 5 kelimeyi çek
     statement = select(Word).order_by(func.random()).limit(5)
-    words = session.exec(statement).all()
+    questions_words = session.exec(statement).all()
     
+    quiz_questions = []
+    
+    for word in questions_words:
+        if word.id is None:
+            continue
+
+        # 2. Her kelime için 3 tane yanlış cevap (distractor) çek
+        # Kendisi hariç rastgele 3 kelime
+        distractor_statement = select(Word).where(Word.id != word.id).order_by(func.random()).limit(3)
+        distractors = session.exec(distractor_statement).all()
+        
+        # 3. Şıkları oluştur (Doğru cevap + 3 yanlış)
+        options = [w.en for w in distractors]
+        options.append(word.en)
+        
+        # 4. Şıkları karıştır
+        random.shuffle(options)
+        
+        # 5. Soru objesini oluştur
+        q = QuestionSchema(
+            id=word.id,
+            question=word.tr, # Sorulan kelime (Türkçe)
+            options=options   # Şıklar (İngilizce)
+        )
+        quiz_questions.append(q)
+    
+    if user.id is None:
+        raise HTTPException(status_code=500, detail="User ID missing")
+
     return {
         "user_id": user.id,
         "clerk_id": user.clerk_id,
-        "questions": words
+        "questions": quiz_questions
     }
+
 
 @router.post("/answer", response_model=AnswerResponse)
 def submit_answer(

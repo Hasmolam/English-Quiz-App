@@ -1,15 +1,15 @@
 from pydantic import BaseModel
 from typing import List
 
-class WordSchema(BaseModel):
+class QuestionSchema(BaseModel):
     id: int
-    tr: str
-    en: str
+    question: str
+    options: List[str]
 
 class QuizStartResponse(BaseModel):
     user_id: int
     clerk_id: str
-    questions: List[WordSchema]
+    questions: List[QuestionSchema]
 
 class AnswerRequest(BaseModel):
     word_id: int
