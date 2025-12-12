@@ -1,4 +1,4 @@
-### 1. Veritabanı Tasarımı (PostgreSQL veya SQLite)
+### 1. Veritabanı Tasarımı (PostgreSQL)
 
 Bir quiz uygulamasının kalbi verilerdir. İlişkisel bir veritabanı yapısı en uygunudur.
 
