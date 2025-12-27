@@ -30,7 +30,6 @@ export default function Page() {
 
   return (
     <ScrollView className="flex-1 bg-white">
-      {/* HEADER SECTION */}
       <View className="bg-purple-700 pt-16 pb-10 px-6 rounded-b-[40px] shadow-xl">
         <View className="flex-row justify-between items-center">
           <View>
@@ -61,12 +60,10 @@ export default function Page() {
         </View>
       </View>
 
-      {/* CONTENT SECTION */}
       <View className="px-6 mt-8 pb-10">
         <Text className="text-gray-800 font-bold text-xl mb-4">Neler Yapalım?</Text>
 
         <View className="flex-row flex-wrap justify-between">
-          {/* Start Quiz Card */}
           <Link href="/quiz" asChild>
             <TouchableOpacity className="w-[48%] bg-purple-50 p-5 rounded-3xl mb-4 border border-purple-100 items-center shadow-sm active:scale-95 transform transition">
               <View className="bg-purple-100 p-4 rounded-full mb-3">
@@ -77,7 +74,6 @@ export default function Page() {
             </TouchableOpacity>
           </Link>
 
-          {/* Leaderboard Card (Placeholder) */}
           <Link href="/leaderboard" asChild>
             <TouchableOpacity className="w-[48%] bg-orange-50 p-5 rounded-3xl mb-4 border border-orange-100 items-center shadow-sm active:scale-95 transform transition">
               <View className="bg-orange-100 p-4 rounded-full mb-3">
@@ -88,7 +84,6 @@ export default function Page() {
             </TouchableOpacity>
           </Link>
 
-          {/* Profile Card */}
           <Link href="/stats" asChild>
             <TouchableOpacity className="w-full bg-blue-50 p-5 rounded-3xl mb-4 border border-blue-100 flex-row items-center shadow-sm active:scale-95 transform transition">
               <View className="bg-blue-100 p-4 rounded-full mr-4">
@@ -103,7 +98,6 @@ export default function Page() {
           </Link>
         </View>
 
-        {/* AUTH ACTIONS */}
         <View className="mt-6">
           <SignedIn>
             <View className="bg-gray-100 rounded-2xl p-4 flex-row justify-between items-center">
