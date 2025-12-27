@@ -5,7 +5,6 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useApi } from '@/utils/api';
 
-// Backend response types
 interface QuizQuestion {
   id: number;
   question: string;
@@ -40,9 +39,8 @@ export default function QuizScreen() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
-  // Scores
-  const [totalScore, setTotalScore] = useState(0); // Global score from DB
-  const [sessionScore, setSessionScore] = useState(0); // Score earned in this session
+  const [totalScore, setTotalScore] = useState(0);
+  const [sessionScore, setSessionScore] = useState(0); 
 
   const [submitting, setSubmitting] = useState(false);
   const [answerResult, setAnswerResult] = useState<AnswerResponse | null>(null);
@@ -88,7 +86,6 @@ export default function QuizScreen() {
       if (response.correct) {
         setSessionScore(prev => prev + 10);
       } else {
-        // Track wrong answer
         setWrongAnswers(prev => [...prev, {
           question: currentQuestion.question,
           yourAnswer: selectedOption,
@@ -111,7 +108,6 @@ export default function QuizScreen() {
       setSelectedOption(null);
       setAnswerResult(null);
     } else {
-      // Quiz finished - Update Daily Stats
       try {
         await fetchWithAuth('/quiz/finish', { method: 'POST' });
       } catch (e) {
@@ -130,7 +126,6 @@ export default function QuizScreen() {
     );
   }
 
-  // --- RESULTS SCREEN ---
   if (isFinished) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -140,8 +135,6 @@ export default function QuizScreen() {
             <Text className="text-3xl font-bold mt-4 text-center">Tebrikler!</Text>
             <Text className="text-gray-500 text-lg mt-2 text-center">Quiz tamamlandı.</Text>
           </View>
-
-          {/* Scores Card */}
           <View className="flex-row justify-between mb-8 space-x-4">
             <View className="flex-1 bg-purple-50 p-5 rounded-2xl items-center border border-purple-100">
               <Text className="text-gray-500 text-xs uppercase font-bold tracking-wider text-center">Bu Test Puanı</Text>
@@ -151,9 +144,7 @@ export default function QuizScreen() {
               <Text className="text-gray-500 text-xs uppercase font-bold tracking-wider text-center">Genel Puan</Text>
               <Text className="text-4xl font-extrabold text-gray-800 mt-2">{totalScore}</Text>
             </View>
-          </View>
-
-          {/* Wrong Answers List */}
+          </View>    
           {wrongAnswers.length > 0 && (
             <View className="mb-10">
               <Text className="text-xl font-bold mb-4 text-red-600">Yanlış Cevaplar</Text>
@@ -208,7 +199,6 @@ export default function QuizScreen() {
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="flex-1 px-5 pt-4">
 
-        {/* --- HEADER --- */}
         <View className="flex-row justify-between items-center mb-6">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -224,7 +214,6 @@ export default function QuizScreen() {
           </View>
         </View>
 
-        {/* --- PROGRESS BAR --- */}
         <View className="h-1.5 w-full bg-gray-200 rounded-full mb-6 relative">
           <View
             className="absolute left-0 top-0 h-full bg-purple-600 rounded-full"
@@ -232,7 +221,6 @@ export default function QuizScreen() {
           />
         </View>
 
-        {/* --- SORU ALANI --- */}
         <Text className="text-purple-600 font-bold mb-2 text-sm uppercase">
           Question {currentQuestionIndex + 1} / {questions.length}
         </Text>
@@ -241,7 +229,6 @@ export default function QuizScreen() {
           What is the English for "{currentQuestion.question}"?
         </Text>
 
-        {/* --- SEÇENEKLER --- */}
         <View className="space-y-4">
           {currentQuestion.options.map((option, index) => {
             const isSelected = selectedOption === option;
@@ -300,7 +287,6 @@ export default function QuizScreen() {
           })}
         </View>
 
-        {/* --- FEEDBACK ALANI (Eğer cevaplandıysa) --- */}
         {answerResult && (
           <View className={`mt-6 p-4 rounded-xl ${answerResult.correct ? 'bg-green-100' : 'bg-red-100'}`}>
             <Text className={`text-center font-bold text-lg ${answerResult.correct ? 'text-green-800' : 'text-red-800'}`}>
@@ -314,7 +300,6 @@ export default function QuizScreen() {
 
       </View>
 
-      {/* --- ALT BUTON (SUBMIT / NEXT) --- */}
       <View className="p-5 pb-8">
         <TouchableOpacity
           className={`w-full py-4 rounded-2xl flex-row justify-center items-center shadow-lg ${submitting ? 'bg-gray-400' : 'bg-black'}`}
