@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class QuestionSchema(BaseModel):
     id: int
@@ -18,6 +18,7 @@ class AnswerResponse(BaseModel):
     correct: bool
     correct_answer: str
     user_score: int
+    user_level: str
     message: str
 
 class LeaderboardUser(BaseModel):
@@ -26,9 +27,32 @@ class LeaderboardUser(BaseModel):
     total_score: int
     level: str
 
+class DailyActivityItem(BaseModel):
+    day_name: str
+    date: str
+    is_completed: bool
+    is_today: bool
+
+class AchievementItem(BaseModel):
+    id: str
+    title: str
+    description: str
+    icon: str
+    current_value: int
+    target_value: int
+    is_unlocked: bool
+    color: str
+
 class UserStatsResponse(BaseModel):
     total_score: int
     level: str
     rank: int
     total_players: int
-
+    quizzes_completed: int
+    correct_answers: int
+    total_answers: int
+    accuracy_rate: int
+    current_streak: int
+    longest_streak: int
+    weekly_activity: List[DailyActivityItem]
+    achievements: List[AchievementItem]

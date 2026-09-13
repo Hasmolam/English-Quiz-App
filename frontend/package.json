@@ -49,6 +49,7 @@
     "@babel/core": "^7.26.10",
     "@react-native-community/cli-server-api": "^15.1.0",
     "@types/react": "~19.1.17",
+    "puppeteer-core": "^25.10.0",
     "typescript": "~5.9.3"
   },
   "private": true
