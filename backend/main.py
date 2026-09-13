@@ -5,7 +5,7 @@ from sqlmodel import SQLModel
 
 # Modüllerimizi çağırıyoruz
 from database import engine
-from routers import quiz
+from routers import auth, quiz
 
 # Uygulama başlarken tabloları oluşturmak için (Lifecycle)
 @asynccontextmanager
@@ -30,6 +30,7 @@ app.add_middleware(
 )
 
 # Router'ları ana uygulamaya ekliyoruz
+app.include_router(auth.router)
 app.include_router(quiz.router)
 
 @app.get("/")

@@ -1,35 +1,38 @@
 import * as React from "react";
-import { Text, TextInput, TouchableOpacity, View, StyleSheet, ActivityIndicator } from "react-native";
-import { useSignIn } from "@clerk/clerk-expo";
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from '@expo/vector-icons'; // İkonlar için
+import { useAuth } from "@/context/AuthContext";
 
 export default function SignInScreen() {
-  const { signIn, setActive, isLoaded } = useSignIn();
+  const { signIn } = useAuth();
   const router = useRouter();
 
-  const [emailAddress, setEmailAddress] = React.useState("");
+  const [identifier, setIdentifier] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  // GİRİŞ YAPMA FONKSİYONU
   const onSignInPress = async () => {
-    if (!isLoaded) return;
+    if (!identifier.trim() || !password) {
+      setErrorMessage("Lütfen e-posta/kullanıcı adı ve şifrenizi girin.");
+      return;
+    }
+
     setIsLoading(true);
+    setErrorMessage(null);
 
     try {
-      const completeSignIn = await signIn.create({
-        identifier: emailAddress,
-        password,
-      });
-      
-      // Giriş başarılıysa oturumu aktif et ve ana sayfaya yönlendir
-      await setActive({ session: completeSignIn.createdSessionId });
+      await signIn(identifier, password);
       router.replace("/");
     } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
-      // Hata mesajını kullanıcıya göster (Örn: Şifre yanlış)
-      alert(err.errors[0]?.longMessage || "Giriş yapılamadı. Bilgilerinizi kontrol edin.");
+      setErrorMessage(err.message || "Giriş yapılamadı. Bilgilerinizi kontrol edin.");
     } finally {
       setIsLoading(false);
     }
@@ -44,31 +47,25 @@ export default function SignInScreen() {
       </View>
 
       <View style={styles.form}>
-        {/* Sosyal Butonlar (Görseldir) */}
-        <View style={styles.socialRow}>
-          <TouchableOpacity style={styles.socialButton}>
-            <Ionicons name="logo-apple" size={20} color="white" />
-            <Text style={styles.socialText}>Apple</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton}>
-            <Ionicons name="logo-google" size={20} color="white" />
-            <Text style={styles.socialText}>Google</Text>
-          </TouchableOpacity>
-        </View>
+        {errorMessage ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        ) : null}
 
-        <View style={styles.divider}>
-          <Text style={styles.dividerText}>veya</Text>
-        </View>
-
-        {/* Email Input */}
+        {/* Identifier Input */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email Adresi veya Kullanıcı Adı</Text>
           <TextInput
             autoCapitalize="none"
-            value={emailAddress}
-            placeholder="Email..."
+            autoCorrect={false}
+            value={identifier}
+            placeholder="ornek@email.com veya kullanici_adi"
             placeholderTextColor="#666"
-            onChangeText={setEmailAddress}
+            onChangeText={(text) => {
+              setIdentifier(text);
+              if (errorMessage) setErrorMessage(null);
+            }}
             style={styles.input}
           />
         </View>
@@ -81,23 +78,30 @@ export default function SignInScreen() {
             placeholder="Şifreniz..."
             placeholderTextColor="#666"
             secureTextEntry={true}
-            onChangeText={setPassword}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (errorMessage) setErrorMessage(null);
+            }}
             style={styles.input}
           />
         </View>
-        
-        <TouchableOpacity onPress={() => alert("Şifre sıfırlama henüz aktif değil.")} style={{alignSelf: 'flex-end', marginBottom: 20}}>
-            <Text style={{color: '#6C47FF', fontSize: 12}}>Şifremi Unuttum?</Text>
-        </TouchableOpacity>
 
         {/* Giriş Yap Butonu */}
-        <TouchableOpacity style={styles.button} onPress={onSignInPress} disabled={isLoading}>
-          {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Giriş Yap</Text>}
+        <TouchableOpacity
+          style={[styles.button, isLoading && styles.buttonDisabled]}
+          onPress={onSignInPress}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Giriş Yap</Text>
+          )}
         </TouchableOpacity>
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Hesabın yok mu? </Text>
-          <TouchableOpacity onPress={() => router.push("/sign-up")}>
+          <TouchableOpacity onPress={() => router.push("/(auth)/sign-up")}>
             <Text style={styles.link}>Kayıt Ol</Text>
           </TouchableOpacity>
         </View>
@@ -106,23 +110,22 @@ export default function SignInScreen() {
   );
 }
 
-// --- STYLES (Sign Up ile aynı tutarlılıkta) ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111111', // Koyu Arka Plan
-    padding: 20,
+    backgroundColor: '#111111',
+    padding: 24,
     justifyContent: 'center',
   },
   header: {
-    marginBottom: 30,
+    marginBottom: 32,
     alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
@@ -131,58 +134,46 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
   },
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: '#1F1F1F',
+  errorContainer: {
+    backgroundColor: '#3b1212',
+    borderWidth: 1,
+    borderColor: '#ef4444',
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 5,
-    borderWidth: 1,
-    borderColor: '#333',
+    marginBottom: 16,
   },
-  socialText: {
-    color: 'white',
-    marginLeft: 10,
-    fontWeight: '500',
-  },
-  divider: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  dividerText: {
-    color: '#555',
+  errorText: {
+    color: '#fca5a5',
+    fontSize: 13,
+    textAlign: 'center',
   },
   inputContainer: {
-    marginBottom: 15,
+    marginBottom: 16,
   },
   label: {
     color: '#ccc',
-    marginBottom: 5,
-    fontSize: 12,
+    marginBottom: 6,
+    fontSize: 13,
     fontWeight: '600',
   },
   input: {
     backgroundColor: '#1F1F1F',
     color: '#fff',
-    padding: 15,
+    padding: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#333',
-    fontSize: 16,
+    fontSize: 15,
   },
   button: {
-    backgroundColor: '#6C47FF', // Clerk Moru
+    backgroundColor: '#6C47FF',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: '#fff',
@@ -192,7 +183,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 24,
   },
   footerText: {
     color: '#888',

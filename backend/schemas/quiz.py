@@ -8,7 +8,6 @@ class QuestionSchema(BaseModel):
 
 class QuizStartResponse(BaseModel):
     user_id: int
-    clerk_id: str
     questions: List[QuestionSchema]
 
 class AnswerRequest(BaseModel):

@@ -1,5 +1,5 @@
 {
-  "name": "clerk-expo-quickstart",
+  "name": "english-quiz-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -10,7 +10,6 @@
     "lint": "expo lint"
   },
   "dependencies": {
-    "@clerk/clerk-expo": "^2.17.0",
     "@expo/vector-icons": "^15.0.3",
     "@react-navigation/native": "^7.0.0",
     "base-64": "^1.0.0",

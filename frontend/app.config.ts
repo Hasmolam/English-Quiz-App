@@ -2,8 +2,8 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: process.env.APP_NAME || "clerk-expo-quickstart",
-  slug: process.env.APP_SLUG || "clerk-expo-quickstart",
+  name: process.env.APP_NAME || "English Quiz App",
+  slug: process.env.APP_SLUG || "english-quiz-app",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",

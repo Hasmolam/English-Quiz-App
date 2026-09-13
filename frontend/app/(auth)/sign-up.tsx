@@ -1,55 +1,49 @@
 import * as React from "react";
-import { Text, TextInput, TouchableOpacity, View, StyleSheet, ActivityIndicator } from "react-native";
-import { useSignUp } from "@clerk/clerk-expo";
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from '@expo/vector-icons'; // İkonlar için
+import { useAuth } from "@/context/AuthContext";
 
 export default function SignUpScreen() {
-  const { isLoaded, signUp, setActive } = useSignUp();
+  const { signUp } = useAuth();
   const router = useRouter();
 
+  const [username, setUsername] = React.useState("");
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [pendingVerification, setPendingVerification] = React.useState(false);
-  const [code, setCode] = React.useState("");
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  // 1. ADIM: KAYIT OLMA FONKSİYONU
   const onSignUpPress = async () => {
-    if (!isLoaded) return;
-    setIsLoading(true);
-
-    try {
-      await signUp.create({
-        emailAddress,
-        password,
-      });
-
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-      setPendingVerification(true);
-    } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
-      alert("Hata: " + err.errors[0].message);
-    } finally {
-      setIsLoading(false);
+    if (!username.trim() || !emailAddress.trim() || !password) {
+      setErrorMessage("Lütfen tüm alanları doldurun.");
+      return;
     }
-  };
 
-  // 2. ADIM: DOĞRULAMA FONKSİYONU
-  const onPressVerify = async () => {
-    if (!isLoaded) return;
+    if (username.trim().length < 3) {
+      setErrorMessage("Kullanıcı adı en az 3 karakter olmalıdır.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage("Şifre en az 6 karakter olmalıdır.");
+      return;
+    }
+
     setIsLoading(true);
+    setErrorMessage(null);
 
     try {
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code,
-      });
-
-      await setActive({ session: completeSignUp.createdSessionId });
+      await signUp(username, emailAddress, password);
       router.replace("/");
     } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
-      alert("Kod hatalı veya süre doldu.");
+      setErrorMessage(err.message || "Kayıt işlemi başarısız. Bilgilerinizi kontrol edin.");
     } finally {
       setIsLoading(false);
     }
@@ -60,167 +54,156 @@ export default function SignUpScreen() {
       {/* Üst Başlık */}
       <View style={styles.header}>
         <Text style={styles.title}>Hesap Oluştur</Text>
-        <Text style={styles.subtitle}>Başlamak için bilgilerinizi girin.</Text>
+        <Text style={styles.subtitle}>Quiz dünyasına katılmak için bilgilerinizi girin.</Text>
       </View>
 
-      {!pendingVerification ? (
-        // --- FORM EKRANI ---
-        <View style={styles.form}>
-          {/* Sosyal Butonlar (Görseldir, işlev eklemek gerekir) */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-apple" size={20} color="white" />
-              <Text style={styles.socialText}>Apple</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-google" size={20} color="white" />
-              <Text style={styles.socialText}>Google</Text>
-            </TouchableOpacity>
+      <View style={styles.form}>
+        {errorMessage ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
           </View>
+        ) : null}
 
-          <View style={styles.divider}>
-            <Text style={styles.dividerText}>veya</Text>
-          </View>
-
-          {/* Email Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email Adresi</Text>
-            <TextInput
-              autoCapitalize="none"
-              value={emailAddress}
-              placeholder="ornek@email.com"
-              placeholderTextColor="#666"
-              onChangeText={setEmailAddress}
-              style={styles.input}
-            />
-          </View>
-
-          {/* Şifre Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Şifre</Text>
-            <TextInput
-              value={password}
-              placeholder="Şifreniz..."
-              placeholderTextColor="#666"
-              secureTextEntry={true}
-              onChangeText={setPassword}
-              style={styles.input}
-            />
-          </View>
-
-          {/* Kayıt Butonu */}
-          <TouchableOpacity style={styles.button} onPress={onSignUpPress} disabled={isLoading}>
-            {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Devam Et</Text>}
-          </TouchableOpacity>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Zaten hesabın var mı? </Text>
-            <TouchableOpacity onPress={() => router.push("/sign-in")}>
-              <Text style={styles.link}>Giriş Yap</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
-        // --- DOĞRULAMA KODU EKRANI ---
-        <View style={styles.form}>
-          <Text style={styles.title}>Emailini Kontrol Et</Text>
-          <Text style={styles.subtitle}>{emailAddress} adresine gelen kodu gir.</Text>
-          
+        {/* Kullanıcı Adı Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Kullanıcı Adı</Text>
           <TextInput
-            value={code}
-            placeholder="123456"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={username}
+            placeholder="kullanici_adi"
             placeholderTextColor="#666"
-            onChangeText={setCode}
-            style={[styles.input, { textAlign: 'center', letterSpacing: 5, fontSize: 24 }]}
+            onChangeText={(text) => {
+              setUsername(text);
+              if (errorMessage) setErrorMessage(null);
+            }}
+            style={styles.input}
           />
-          
-          <TouchableOpacity style={styles.button} onPress={onPressVerify} disabled={isLoading}>
-            {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Hesabı Doğrula</Text>}
+        </View>
+
+        {/* Email Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email Adresi</Text>
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            value={emailAddress}
+            placeholder="ornek@email.com"
+            placeholderTextColor="#666"
+            onChangeText={(text) => {
+              setEmailAddress(text);
+              if (errorMessage) setErrorMessage(null);
+            }}
+            style={styles.input}
+          />
+        </View>
+
+        {/* Şifre Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Şifre</Text>
+          <TextInput
+            value={password}
+            placeholder="En az 6 karakter..."
+            placeholderTextColor="#666"
+            secureTextEntry={true}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (errorMessage) setErrorMessage(null);
+            }}
+            style={styles.input}
+          />
+        </View>
+
+        {/* Kayıt Butonu */}
+        <TouchableOpacity
+          style={[styles.button, isLoading && styles.buttonDisabled]}
+          onPress={onSignUpPress}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Kayıt Ol</Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Zaten hesabın var mı? </Text>
+          <TouchableOpacity onPress={() => router.push("/(auth)/sign-in")}>
+            <Text style={styles.link}>Giriş Yap</Text>
           </TouchableOpacity>
         </View>
-      )}
+      </View>
     </View>
   );
 }
 
-// --- STYLES (TASARIM KODLARI) ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111111', // Koyu Arka Plan
-    padding: 20,
+    backgroundColor: '#111111',
+    padding: 24,
     justifyContent: 'center',
   },
   header: {
-    marginBottom: 30,
+    marginBottom: 32,
     alignItems: 'center',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
     color: '#888888',
+    textAlign: 'center',
   },
   form: {
     width: '100%',
   },
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: '#1F1F1F',
+  errorContainer: {
+    backgroundColor: '#3b1212',
+    borderWidth: 1,
+    borderColor: '#ef4444',
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 5,
-    borderWidth: 1,
-    borderColor: '#333',
+    marginBottom: 16,
   },
-  socialText: {
-    color: 'white',
-    marginLeft: 10,
-    fontWeight: '500',
-  },
-  divider: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  dividerText: {
-    color: '#555',
+  errorText: {
+    color: '#fca5a5',
+    fontSize: 13,
+    textAlign: 'center',
   },
   inputContainer: {
-    marginBottom: 15,
+    marginBottom: 16,
   },
   label: {
     color: '#ccc',
-    marginBottom: 5,
-    fontSize: 12,
+    marginBottom: 6,
+    fontSize: 13,
     fontWeight: '600',
   },
   input: {
     backgroundColor: '#1F1F1F',
     color: '#fff',
-    padding: 15,
+    padding: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#333',
-    fontSize: 16,
+    fontSize: 15,
   },
   button: {
-    backgroundColor: '#6C47FF', // Clerk Moru
+    backgroundColor: '#6C47FF',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: '#fff',
@@ -230,7 +213,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 24,
   },
   footerText: {
     color: '#888',

@@ -13,7 +13,6 @@ interface QuizQuestion {
 
 interface QuizStartResponse {
   user_id: number;
-  clerk_id: string;
   questions: QuizQuestion[];
 }
 
