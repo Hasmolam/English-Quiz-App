@@ -334,9 +334,9 @@ docker compose down
 To launch the interactive Expo Metro bundler with a live terminal QR code for **Expo Go** or mobile emulators:
 
 ```bash
-docker compose run --rm -it -p 8081:8081 expo-dev npx expo start --tunnel
+docker compose run --rm -it expo-dev npx expo start --host lan
 ```
-*(or for local Wi-Fi LAN access: `docker compose run --rm -it -p 8081:8081 expo-dev npx expo start --host lan`)*
+*(or with tunnel mode: `docker compose run --rm -it expo-dev npx expo start --tunnel`)*
 
 ### Production Environment Variables
 
