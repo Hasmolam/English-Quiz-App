@@ -1,32 +1,33 @@
-
-import { SignedIn, SignedOut, useUser } from '@clerk/clerk-expo'
-import { Link, useFocusEffect } from 'expo-router'
-import { Text, View, TouchableOpacity, ScrollView, Image } from 'react-native'
-import { SignOutButton } from '@/components/SignOutButton'
-import { Ionicons } from '@expo/vector-icons'
-import "@/global.css"
-import React, { useState, useCallback } from 'react'
-import { useApi } from '@/utils/api'
+import { Link, useFocusEffect } from 'expo-router';
+import { Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { SignOutButton } from '@/components/SignOutButton';
+import { Ionicons } from '@expo/vector-icons';
+import "@/global.css";
+import React, { useState, useCallback } from 'react';
+import { useApi } from '@/utils/api';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Page() {
-  const { user } = useUser()
-  const { fetchWithAuth } = useApi()
-  const [dailyStats, setDailyStats] = useState({ completed: 0, target: 5 })
+  const { user, isAuthenticated } = useAuth();
+  const { fetchWithAuth } = useApi();
+  const [dailyStats, setDailyStats] = useState({ completed: 0, target: 5 });
 
   useFocusEffect(
     useCallback(() => {
-      fetchDailyStats()
-    }, [])
-  )
+      if (isAuthenticated) {
+        fetchDailyStats();
+      }
+    }, [isAuthenticated])
+  );
 
   const fetchDailyStats = async () => {
     try {
-      const data = await fetchWithAuth('/quiz/daily_progress')
-      if (data) setDailyStats(data)
+      const data = await fetchWithAuth('/quiz/daily_progress');
+      if (data) setDailyStats(data);
     } catch (e) {
-      console.log("Stats fetch error", e)
+      console.log("Stats fetch error", e);
     }
-  }
+  };
 
   return (
     <ScrollView className="flex-1 bg-white">
@@ -35,16 +36,11 @@ export default function Page() {
           <View>
             <Text className="text-purple-200 font-medium text-lg">Hoşgeldin,</Text>
             <Text className="text-white font-bold text-3xl">
-              {user?.firstName || user?.emailAddresses[0].emailAddress.split('@')[0] || "Misafir"} 👋
+              {user?.username || "Misafir"} 👋
             </Text>
           </View>
-          <View className="bg-purple-600 p-2 rounded-full border border-purple-500">
-            {user?.imageUrl ? (
-              <Image source={{ uri: user.imageUrl }} className="w-10 h-10 rounded-full" />
-            ) : (
-              <Ionicons name="person" size={24} color="white" />
-            )}
-
+          <View className="bg-purple-600 p-3 rounded-full border border-purple-500">
+            <Ionicons name="person" size={24} color="white" />
           </View>
         </View>
 
@@ -99,14 +95,15 @@ export default function Page() {
         </View>
 
         <View className="mt-6">
-          <SignedIn>
+          {isAuthenticated ? (
             <View className="bg-gray-100 rounded-2xl p-4 flex-row justify-between items-center">
-              <Text className="text-gray-600 font-medium">Oturum Açık</Text>
+              <View>
+                <Text className="text-gray-800 font-semibold">{user?.username}</Text>
+                <Text className="text-gray-500 text-xs">{user?.email}</Text>
+              </View>
               <SignOutButton />
             </View>
-          </SignedIn>
-
-          <SignedOut>
+          ) : (
             <View className="bg-gray-100 rounded-2xl p-6 items-center">
               <Text className="text-gray-800 font-bold text-lg mb-2">Hesabın var mı?</Text>
               <Text className="text-gray-500 text-center mb-6">İlerlemeni kaydetmek için giriş yapmalısın.</Text>
@@ -123,10 +120,10 @@ export default function Page() {
                 </TouchableOpacity>
               </Link>
             </View>
-          </SignedOut>
+          )}
         </View>
 
       </View>
     </ScrollView>
-  )
+  );
 }

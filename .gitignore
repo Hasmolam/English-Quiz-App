@@ -1,5 +1,8 @@
 ### dotenv ###
 .env
+*.db
+*.sqlite
+*.sqlite3
 
 ### Node ###
 # Logs

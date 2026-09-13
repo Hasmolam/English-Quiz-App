@@ -25,7 +25,7 @@ def start_quiz(
     user: User = Depends(get_current_db_user), # Auth ve DB User buradan gelir
     session: Session = Depends(get_session) # DB buradan gelir
 ):
-    print(f"User DB ID: {user.id}, Clerk ID: {user.clerk_id}")
+    print(f"User DB ID: {user.id}, Username: {user.username}")
 
     # 1. Sorulacak 5 kelimeyi çek
     statement = select(Word).order_by(func.random()).limit(5)
@@ -62,7 +62,6 @@ def start_quiz(
 
     return {
         "user_id": user.id,
-        "clerk_id": user.clerk_id,
         "questions": quiz_questions
     }
 

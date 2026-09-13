@@ -1,24 +1,27 @@
-import { useClerk } from '@clerk/clerk-expo'
-import * as Linking from 'expo-linking'
-import { Text, TouchableOpacity } from 'react-native'
+import React from 'react';
+import { Text, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
 
 export const SignOutButton = () => {
-  // Use `useClerk()` to access the `signOut()` function
-  const { signOut } = useClerk()
+  const { signOut } = useAuth();
+  const router = useRouter();
+
   const handleSignOut = async () => {
     try {
-      await signOut()
-      // Redirect to your desired page
-      Linking.openURL(Linking.createURL('/'))
+      await signOut();
+      router.replace('/(auth)/sign-in');
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+      console.error('Sign out failed:', err);
     }
-  }
+  };
+
   return (
-    <TouchableOpacity onPress={handleSignOut}>
-      <Text>Sign out</Text>
+    <TouchableOpacity
+      onPress={handleSignOut}
+      className="bg-red-50 px-4 py-2 rounded-xl border border-red-200 active:opacity-75"
+    >
+      <Text className="text-red-600 font-semibold text-sm">Çıkış Yap</Text>
     </TouchableOpacity>
-  )
-}
+  );
+};
