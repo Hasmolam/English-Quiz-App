@@ -516,3 +516,6 @@ buck-out/
 [Ss]cripts
 pyvenv.cfg
 pip-selfcheck.json
+
+# Agents
+.agents/*

@@ -11,14 +11,14 @@ services:
       - "8000:8000"
     environment:
       - SQLMODEL_DATABASE_URL=postgresql://postgres:postgres@db:5432/englishquiz
-      - CLERK_ISSUER_URL=${CLERK_ISSUER_URL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     depends_on:
       - db
     networks:
       - quiz-network
 
   db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: english-quiz-db
     environment:
       - POSTGRES_USER=postgres

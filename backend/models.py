@@ -10,6 +10,12 @@ class User(SQLModel, table=True):
     hashed_password: str = Field(nullable=False)
     total_score: int = Field(default=0)
     level: str = Field(default="A1")
+    quizzes_completed: int = Field(default=0)
+    correct_answers: int = Field(default=0)
+    total_answers: int = Field(default=0)
+    current_streak: int = Field(default=0)
+    longest_streak: int = Field(default=0)
+    last_active_date: str | None = Field(default=None)
     created_at: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
