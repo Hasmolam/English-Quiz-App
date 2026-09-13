@@ -5,6 +5,7 @@
 [![Expo](https://img.shields.io/badge/Expo_SDK-54-000020.svg?style=flat&logo=expo&logoColor=white)](https://expo.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178C6.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
+[![Package Manager: uv](https://img.shields.io/badge/Package_Manager-uv-de5fe9.svg?style=flat&logo=python&logoColor=white)](https://docs.astral.sh/uv/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Security: Argon2id](https://img.shields.io/badge/Security-Argon2id_Password_Hashing-blue.svg)](https://datatracker.ietf.org/doc/html/rfc9106)
 [![Auth: JWT RTR](https://img.shields.io/badge/Auth-Refresh_Token_Rotation-green.svg)](https://auth0.com/docs/secure/tokens/refresh-tokens/refresh-token-rotation)
@@ -143,6 +144,9 @@ englishquizapp/
 │   │   └── quiz.py              # Endpoints: /start, /answer, /finish, /stats, /leaderboard
 │   ├── schemas/                 # Pydantic v2 validation models
 │   ├── seed_words.py            # Vocabulary bank seeding utility
+│   ├── pyproject.toml           # PEP 621 dependencies & project metadata
+│   ├── uv.lock                  # Deterministic, cryptographically hashed lockfile
+│   ├── requirements.txt         # Pinned export for legacy environments
 │   ├── test_auth_flow.py        # 12-step end-to-end integration test suite
 │   └── test_edge_cases.py       # Concurrent race-condition and replay attack test suite
 ├── frontend/
@@ -183,16 +187,14 @@ englishquizapp/
 
 ### Step 1: Backend Setup
 
+The backend utilizes **[uv](https://docs.astral.sh/uv/)** by Astral as the modern, high-performance dependency resolver and environment manager:
+
 ```bash
 # Navigate to backend directory
 cd backend
 
-# Create and activate Python virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Option A: Recommended (Astral uv — fast, deterministic, lockfile-backed)
+uv sync
 
 # Configure environment variables
 cat <<EOF > .env
@@ -201,11 +203,23 @@ JWT_SECRET_KEY=your-super-secret-jwt-key-change-this-in-production-min-32-chars
 EOF
 
 # Seed vocabulary database
-python seed_words.py
+uv run python seed_words.py
 
 # Start the development server
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+<details>
+<summary><b>Option B: Alternative setup via legacy venv + pip</b></summary>
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python seed_words.py
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
+</details>
 
 Interactive OpenAPI documentation is available at:
 👉 **Swagger UI:** `http://localhost:8000/docs`  
@@ -245,13 +259,12 @@ The repository includes comprehensive automated test suites covering happy paths
 
 ```bash
 cd backend
-source venv/bin/activate
 
 # 1. Run Complete Auth & Quiz Lifecycle Test Suite (12 validations)
-python test_auth_flow.py
+uv run python test_auth_flow.py
 
 # 2. Run Concurrency, Replay Attack & Mutex Edge-Case Test Suite
-python test_edge_cases.py
+uv run python test_edge_cases.py
 ```
 
 To verify static typing across the React Native frontend:
