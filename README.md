@@ -300,21 +300,42 @@ cd frontend
 
 ---
 
-## 🐳 Containerized Deployment (Docker)
+## 🐳 One-Command Full-Stack Deployment (Docker)
 
-To deploy the backend with PostgreSQL via Docker Compose:
+You can spin up the entire application stack (**PostgreSQL 16**, **FastAPI Backend**, and **Expo Web via Nginx**) with a single command:
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
+```
+
+### Services & Endpoints
+
+| Service | Port (Host) | Description | Health Status |
+| :--- | :--- | :--- | :---: |
+| **Frontend Web** | [`http://localhost:3000`](http://localhost:3000) | Production Expo Web build served by Alpine Nginx | Ready |
+| **Backend API** | [`http://localhost:8000`](http://localhost:8000) | FastAPI with Astral `uv`, auto-seeded vocabulary bank | Ready |
+| **PostgreSQL 16** | `localhost:5432` | Relational database with persistent volume storage | Healthy |
+| **Swagger UI** | [`http://localhost:8000/docs`](http://localhost:8000/docs) | Interactive OpenAPI / Swagger API explorer | Ready |
+
+> [!TIP]
+> The database vocabulary bank is automatically seeded with CEFR vocabulary words (`A1` through `C1`) upon container startup via the FastAPI lifespan hook. No manual seeding command is needed.
+
+To view logs or stop the stack:
+```bash
+# View live logs
+docker compose logs -f
+
+# Shut down all services and keep data volume intact
+docker compose down
 ```
 
 ### Production Environment Variables
 
-| Variable | Description | Example |
+| Variable | Description | Default in Docker Compose |
 | :--- | :--- | :--- |
-| `SQLMODEL_DATABASE_URL` | PostgreSQL connection URI | `postgresql://quizuser:secret@postgres:5432/quizdb` |
-| `JWT_SECRET_KEY` | Cryptographically random secret | `openssl rand -hex 32` |
-| `EXPO_PUBLIC_API_URL` | Production API public URL | `https://api.yourdomain.com` |
+| `SQLMODEL_DATABASE_URL` | PostgreSQL connection URI | `postgresql://quizuser:quizpassword@db:5432/quizdb` |
+| `JWT_SECRET_KEY` | Cryptographically random secret | Configured in `docker-compose.yml` |
+| `EXPO_PUBLIC_API_URL` | Frontend API client target | `http://localhost:8000` |
 
 ---
 

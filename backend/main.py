@@ -13,8 +13,10 @@ async def lifespan(app: FastAPI):
     # Uygulama başlarken çalışır
     try:
         SQLModel.metadata.create_all(engine)
+        from seed_words import seed
+        seed()
     except Exception as e:
-        print(f"DB Init Error (Ignored for startup): {e}")
+        print(f"DB Init/Seed Error: {e}")
     yield
     # Uygulama kapanırken çalışır (gerekirse)
 
