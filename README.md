@@ -1,9 +1,9 @@
 # English Quiz App 🎮 ⚡
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React Native](https://img.shields.io/badge/React_Native-0.76+-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://reactnative.dev)
-[![Expo](https://img.shields.io/badge/Expo_SDK-54-000020.svg?style=flat&logo=expo&logoColor=white)](https://expo.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178C6.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![React Native](https://img.shields.io/badge/React_Native-0.85+-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://reactnative.dev)
+[![Expo](https://img.shields.io/badge/Expo_SDK-56-000020.svg?style=flat&logo=expo&logoColor=white)](https://expo.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0+-3178C6.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![Package Manager: uv](https://img.shields.io/badge/Package_Manager-uv-de5fe9.svg?style=flat&logo=python&logoColor=white)](https://docs.astral.sh/uv/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -178,7 +178,7 @@ englishquizapp/
 ## 🚀 Quick Start Guide
 
 ### Prerequisites
-- **Node.js**: v18.0.0 or higher
+- **Node.js**: v20.0.0 or higher (v22 LTS recommended)
 - **pnpm** (or `npm`)
 - **Python**: v3.12 or higher
 - **Git**
