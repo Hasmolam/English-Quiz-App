@@ -329,6 +329,15 @@ docker compose logs -f
 docker compose down
 ```
 
+### 📱 Running Mobile Metro Server with QR Code (Docker)
+
+To launch the interactive Expo Metro bundler with a live terminal QR code for **Expo Go** or mobile emulators:
+
+```bash
+docker compose run --rm -it -p 8081:8081 expo-dev npx expo start --tunnel
+```
+*(or for local Wi-Fi LAN access: `docker compose run --rm -it -p 8081:8081 expo-dev npx expo start --host lan`)*
+
 ### Production Environment Variables
 
 | Variable | Description | Default in Docker Compose |
