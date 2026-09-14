@@ -23,7 +23,7 @@ function NavigationGuard() {
     } else if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/sign-in');
     }
-  }, [isAuthenticated, isLoading, segments]);
+  }, [isAuthenticated, isLoading, segments, router]);
 
   return <Slot />;
 }

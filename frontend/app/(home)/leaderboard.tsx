@@ -5,17 +5,17 @@ import {
   FlatList,
   ActivityIndicator,
   Pressable,
-  SafeAreaView,
   StyleSheet,
-  Platform,
 } from 'react-native';
-import { useApi } from '@/utils/api';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { fetchWithAuth } from '@/utils/api';
 import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 interface LeaderboardUser {
   id: number;
+  rank?: number;
   username?: string;
   email?: string;
   total_score: number;
@@ -25,26 +25,34 @@ interface LeaderboardUser {
 export default function LeaderboardScreen() {
   const router = useRouter();
   const { user: currentUser } = useAuth();
-  const { fetchWithAuth } = useApi();
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeLeague, setActiveLeague] = useState<'bronz' | 'gumus' | 'altin'>('bronz');
 
   useEffect(() => {
-    loadLeaderboard();
-  }, []);
+    let ignore = false;
 
-  const loadLeaderboard = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchWithAuth('/quiz/leaderboard');
-      setUsers(data || []);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+    async function fetchLeaderboard() {
+      try {
+        const data = await fetchWithAuth('/quiz/leaderboard');
+        if (!ignore) {
+          setUsers(data || []);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
     }
-  };
+
+    fetchLeaderboard();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const top1 = users[0];
   const top2 = users[1];
@@ -78,7 +86,7 @@ export default function LeaderboardScreen() {
       <View style={styles.leagueTabsContainer} accessibilityRole="tablist">
         {(['bronz', 'gumus', 'altin'] as const).map((league) => {
           const isActive = activeLeague === league;
-          const leagueInfo: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }> = {
+          const leagueInfo: Record<'bronz' | 'gumus' | 'altin', { label: string; icon: keyof typeof Ionicons.glyphMap; color: string }> = {
             bronz: { label: 'Bronz', icon: 'shield', color: '#CD7F32' },
             gumus: { label: 'Gümüş', icon: 'shield-half', color: '#94A3B8' },
             altin: { label: 'Altın', icon: 'shield-checkmark', color: '#D97706' },
@@ -114,6 +122,22 @@ export default function LeaderboardScreen() {
           <ActivityIndicator size="large" color="#7C3AED" />
           <Text style={styles.loadingText}>Sıralama Hesaplanıyor...</Text>
         </View>
+      ) : users.length === 0 ? (
+        <View style={styles.emptyStateContainer}>
+          <Ionicons name="trophy-outline" size={64} color="#94A3B8" />
+          <Text style={styles.emptyStateTitle}>Henüz bu ligde kimse yok</Text>
+          <Text style={styles.emptyStateSubtitle}>
+            Quiz çözerek ilk puanları topla ve liderlik koltuğuna otur!
+          </Text>
+          <Pressable
+            style={styles.emptyStateButton}
+            onPress={() => router.push('/(home)/quiz')}
+            accessibilityRole="button"
+            accessibilityLabel="Quiz çözmeye başla"
+          >
+            <Text style={styles.emptyStateButtonText}>{"Hemen Quiz'e Başla"}</Text>
+          </Pressable>
+        </View>
       ) : (
         <View style={styles.mainContainer}>
           {/* 3. PODIUM STAGE FOR TOP 3 */}
@@ -124,7 +148,7 @@ export default function LeaderboardScreen() {
                 <View style={styles.podiumColumn}>
                   <View style={[styles.avatarCircle, styles.avatarSilver]}>
                     <Text style={styles.avatarInitial}>
-                      {(top2.username || '2')[0].toUpperCase()}
+                      {(top2.username || '2').charAt(0).toUpperCase()}
                     </Text>
                     <View style={styles.medalBadgeSilver}>
                       <Text style={styles.medalBadgeText}>2</Text>
@@ -150,7 +174,7 @@ export default function LeaderboardScreen() {
                   </View>
                   <View style={[styles.avatarCircle, styles.avatarGold]}>
                     <Text style={[styles.avatarInitial, { color: '#B45309' }]}>
-                      {(top1.username || '1')[0].toUpperCase()}
+                      {(top1.username || '1').charAt(0).toUpperCase()}
                     </Text>
                     <View style={styles.medalBadgeGold}>
                       <Text style={styles.medalBadgeText}>1</Text>
@@ -173,7 +197,7 @@ export default function LeaderboardScreen() {
                 <View style={styles.podiumColumn}>
                   <View style={[styles.avatarCircle, styles.avatarBronze]}>
                     <Text style={styles.avatarInitial}>
-                      {(top3.username || '3')[0].toUpperCase()}
+                      {(top3.username || '3').charAt(0).toUpperCase()}
                     </Text>
                     <View style={styles.medalBadgeBronze}>
                       <Text style={styles.medalBadgeText}>3</Text>
@@ -215,7 +239,7 @@ export default function LeaderboardScreen() {
 
                   <View style={styles.playerAvatar}>
                     <Text style={styles.playerAvatarText}>
-                      {(item.username || 'U')[0].toUpperCase()}
+                      {(item.username || 'U').charAt(0).toUpperCase()}
                     </Text>
                   </View>
 
@@ -259,7 +283,7 @@ export default function LeaderboardScreen() {
                 <View>
                   <Text style={styles.stickyTitle}>Sıralaman</Text>
                   <Text style={styles.stickySubtitle}>
-                    {myRank === 1 ? 'Lider sensin! 👑' : `${users[0]?.total_score - (currentUser?.total_score || 0)} XP ile 1. sıradasın`}
+                    {myRank === 1 ? 'Lider sensin! 👑' : `1. ile aranda ${Math.max(0, (users[0]?.total_score || 0) - (currentUser?.total_score || 0))} XP var`}
                   </Text>
                 </View>
               </View>
@@ -322,7 +346,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     borderWidth: 1.5,
     borderColor: 'transparent',
-    cursor: Platform.OS === 'web' ? 'pointer' : undefined,
+    cursor: process.env.EXPO_OS === 'web' ? 'pointer' : undefined,
   },
   leagueTabActive: {
     backgroundColor: '#4F46E5',
@@ -458,6 +482,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#64748B',
     marginBottom: 8,
+    fontVariant: ['tabular-nums'],
   },
   podiumScoreGold: {
     color: '#B45309',
@@ -495,6 +520,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '900',
     color: '#64748B',
+    fontVariant: ['tabular-nums'],
   },
   listContent: {
     padding: 16,
@@ -525,6 +551,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
     color: '#64748B',
+    fontVariant: ['tabular-nums'],
   },
   rankBadgeTextMe: {
     color: '#4F46E5',
@@ -571,8 +598,8 @@ const styles = StyleSheet.create({
     color: '#3730A3',
   },
   playerLevel: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '600',
     color: '#64748B',
     marginTop: 2,
   },
@@ -591,6 +618,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
     color: '#D97706',
+    fontVariant: ['tabular-nums'],
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    marginTop: 60,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  emptyStateButton: {
+    backgroundColor: '#4F46E5',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+    borderBottomWidth: 3,
+    borderBottomColor: '#3730A3',
+  },
+  emptyStateButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 15,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -633,6 +696,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 14,
+    fontVariant: ['tabular-nums'],
   },
   stickyTitle: {
     color: '#FFFFFF',
@@ -657,5 +721,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '900',
     fontSize: 14,
+    fontVariant: ['tabular-nums'],
   },
 });

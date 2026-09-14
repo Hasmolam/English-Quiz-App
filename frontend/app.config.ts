@@ -37,6 +37,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-secure-store",
     "expo-font",
     "expo-apple-authentication",
+    "expo-status-bar",
+    "expo-web-browser",
     [
       "expo-splash-screen",
       {
@@ -48,6 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   experiments: {
     typedRoutes: true,
+    reactCompiler: true,
   },
   extra: {
     router: {},

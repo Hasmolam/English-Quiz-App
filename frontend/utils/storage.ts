@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 /**
@@ -8,7 +7,7 @@ import * as SecureStore from 'expo-secure-store';
  */
 export const appStorage = {
   async getItem(key: string): Promise<string | null> {
-    if (Platform.OS === 'web') {
+    if (process.env.EXPO_OS === 'web') {
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
           return window.localStorage.getItem(key);
@@ -28,7 +27,7 @@ export const appStorage = {
   },
 
   async setItem(key: string, value: string): Promise<void> {
-    if (Platform.OS === 'web') {
+    if (process.env.EXPO_OS === 'web') {
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.setItem(key, value);
@@ -47,7 +46,7 @@ export const appStorage = {
   },
 
   async deleteItem(key: string): Promise<void> {
-    if (Platform.OS === 'web') {
+    if (process.env.EXPO_OS === 'web') {
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.removeItem(key);

@@ -1,8 +1,8 @@
 # English Quiz App 🎮 ⚡
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React Native](https://img.shields.io/badge/React_Native-0.85+-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://reactnative.dev)
-[![Expo](https://img.shields.io/badge/Expo_SDK-56-000020.svg?style=flat&logo=expo&logoColor=white)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React_Native-0.86+-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://reactnative.dev)
+[![Expo](https://img.shields.io/badge/Expo_SDK-57-000020.svg?style=flat&logo=expo&logoColor=white)](https://expo.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0+-3178C6.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![Package Manager: uv](https://img.shields.io/badge/Package_Manager-uv-de5fe9.svg?style=flat&logo=python&logoColor=white)](https://docs.astral.sh/uv/)

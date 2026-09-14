@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   Pressable,
-  SafeAreaView,
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
-  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { useApi } from '@/utils/api';
+import { fetchWithAuth } from '@/utils/api';
 import { useAuth } from '@/context/AuthContext';
 import { ProgressBar } from '@/components/ProgressBar';
 import { TactileButton } from '@/components/TactileButton';
@@ -46,7 +45,6 @@ const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 
 export default function QuizScreen() {
   const router = useRouter();
-  const { fetchWithAuth } = useApi();
   const { user, updateUser } = useAuth();
 
   const [loading, setLoading] = useState(true);
@@ -54,7 +52,6 @@ export default function QuizScreen() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
-  const [totalScore, setTotalScore] = useState(0);
   const [sessionScore, setSessionScore] = useState(0);
   const [comboCount, setComboCount] = useState(0);
   const [lives, setLives] = useState(3);
@@ -63,38 +60,64 @@ export default function QuizScreen() {
   const [answerResult, setAnswerResult] = useState<AnswerResponse | null>(null);
   const [isFinished, setIsFinished] = useState(false);
   const [wrongAnswers, setWrongAnswers] = useState<WrongAnswer[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadQuiz();
-  }, []);
-
-  const loadQuiz = async () => {
+  const loadQuiz = useCallback(async () => {
+    setLoading(true);
+    setErrorMessage(null);
     try {
-      setLoading(true);
       const data: QuizStartResponse = await fetchWithAuth('/quiz/start');
       setQuestions(data.questions);
-    } catch (error) {
-      Alert.alert('Hata', 'Quiz yüklenirken bir sorun oluştu.');
+    } catch {
+      setErrorMessage('Quiz yüklenirken bir sorun oluştu.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function initQuiz() {
+      try {
+        const data: QuizStartResponse = await fetchWithAuth('/quiz/start');
+        if (!ignore) {
+          setQuestions(data.questions);
+        }
+      } catch {
+        if (!ignore) {
+          setErrorMessage('Quiz yüklenirken bir sorun oluştu.');
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    initQuiz();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const currentQuestion = questions[currentQuestionIndex];
 
   const handleSelectOption = (option: string) => {
     if (!answerResult && !submitting) {
       setSelectedOption(option);
+      if (errorMessage) setErrorMessage(null);
     }
   };
 
   const handleSubmit = async () => {
-    if (!selectedOption) {
-      Alert.alert('Uyarı', 'Lütfen bir seçenek işaretleyin.');
+    if (!selectedOption || submitting || !currentQuestion) {
       return;
     }
 
     setSubmitting(true);
+    setErrorMessage(null);
     try {
       const response: AnswerResponse = await fetchWithAuth('/quiz/answer', {
         method: 'POST',
@@ -104,7 +127,6 @@ export default function QuizScreen() {
         }),
       });
 
-      setTotalScore(response.user_score);
       if (user) {
         updateUser({
           ...user,
@@ -114,9 +136,15 @@ export default function QuizScreen() {
       }
 
       if (response.correct) {
+        if (process.env.EXPO_OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        }
         setSessionScore((prev) => prev + 10);
         setComboCount((prev) => prev + 1);
       } else {
+        if (process.env.EXPO_OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+        }
         setComboCount(0);
         setLives((prev) => Math.max(0, prev - 1));
         setWrongAnswers((prev) => [
@@ -130,8 +158,8 @@ export default function QuizScreen() {
       }
 
       setAnswerResult(response);
-    } catch (error) {
-      Alert.alert('Hata', 'Cevap gönderilemedi.');
+    } catch {
+      setErrorMessage('Cevap gönderilemedi. Lütfen tekrar deneyin.');
     } finally {
       setSubmitting(false);
     }
@@ -272,6 +300,22 @@ export default function QuizScreen() {
   }
 
   // 3. GAMEPLAY SCREEN
+  if (!currentQuestion) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <View style={styles.loadingBox}>
+          <Text style={styles.loadingTitle}>Soru bulunamadı</Text>
+          <TactileButton
+            title="Geri Dön"
+            variant="outline"
+            size="md"
+            onPress={() => router.back()}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const progressRatio = questions.length > 0 ? (currentQuestionIndex + 1) / questions.length : 0;
 
   return (
@@ -384,7 +428,7 @@ export default function QuizScreen() {
                     backgroundColor: cardBg,
                     borderColor: borderColor,
                     borderBottomColor: borderBottomColor,
-                    cursor: Platform.OS === 'web' && !answerResult ? 'pointer' : undefined,
+                    cursor: process.env.EXPO_OS === 'web' && !answerResult ? 'pointer' : undefined,
                   },
                 ]}
               >
@@ -468,6 +512,12 @@ export default function QuizScreen() {
           </View>
         ) : (
           <View style={styles.submitContainer}>
+            {errorMessage && (
+              <View style={styles.errorBanner}>
+                <Ionicons name="alert-circle" size={18} color="#DC2626" />
+                <Text style={styles.errorBannerText}>{errorMessage}</Text>
+              </View>
+            )}
             <TactileButton
               title="Cevabı Kontrol Et"
               icon={
@@ -843,5 +893,23 @@ const styles = StyleSheet.create({
   resultActions: {
     width: '100%',
     marginTop: 8,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FCA5A5',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+    gap: 8,
+  },
+  errorBannerText: {
+    color: '#991B1B',
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
   },
 });

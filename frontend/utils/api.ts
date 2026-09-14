@@ -1,6 +1,34 @@
+import Constants from 'expo-constants';
 import { appStorage } from './storage';
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+function resolveApiUrl(): string {
+  const envUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+
+  if (process.env.EXPO_OS === 'web') {
+    return envUrl;
+  }
+
+  // If already pointing to an explicit non-local server, keep as-is
+  if (!envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    return envUrl;
+  }
+
+  if (process.env.EXPO_OS === 'android') {
+    const hostUri = Constants.expoConfig?.hostUri;
+    const hostIp = hostUri ? hostUri.split(':')[0] : null;
+
+    if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
+      return envUrl.replace('localhost', hostIp).replace('127.0.0.1', hostIp);
+    }
+
+    // Android emulator default host gateway
+    return envUrl.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+  }
+
+  return envUrl;
+}
+
+export const API_URL = resolveApiUrl();
 
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
@@ -83,50 +111,50 @@ export function getRefreshedToken(): Promise<string | null> {
   return refreshPromise;
 }
 
-export const useApi = () => {
-  const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
-    let token = currentAccessToken || (await appStorage.getItem(ACCESS_TOKEN_KEY));
+export const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
+  const token = currentAccessToken || (await appStorage.getItem(ACCESS_TOKEN_KEY));
 
-    const makeRequest = async (authToken: string | null) => {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        ...((options.headers as Record<string, string>) || {}),
-      };
-
-      return fetch(`${API_URL}${endpoint}`, {
-        ...options,
-        headers,
-      });
+  const makeRequest = async (authToken: string | null) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...((options.headers as Record<string, string>) || {}),
     };
 
-    try {
-      let response = await makeRequest(token);
-
-      // If token expired (401), use the single-flight mutex to refresh once
-      if (response.status === 401) {
-        console.log(`[useApi] 401 received for ${endpoint}. Waiting for token refresh...`);
-        const newToken = await getRefreshedToken();
-
-        if (newToken) {
-          console.log(`[useApi] Retrying ${endpoint} with fresh token.`);
-          response = await makeRequest(newToken);
-        } else {
-          throw new Error('Oturum süresi doldu. Lütfen tekrar giriş yapın.');
-        }
-      }
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`API Error: ${response.status} - ${errorBody}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error(`API Request Failed for ${endpoint}:`, error);
-      throw error;
-    }
+    return fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
   };
 
+  try {
+    let response = await makeRequest(token);
+
+    // If token expired (401), use the single-flight mutex to refresh once
+    if (response.status === 401) {
+      console.log(`[useApi] 401 received for ${endpoint}. Waiting for token refresh...`);
+      const newToken = await getRefreshedToken();
+
+      if (newToken) {
+        console.log(`[useApi] Retrying ${endpoint} with fresh token.`);
+        response = await makeRequest(newToken);
+      } else {
+        throw new Error('Oturum süresi doldu. Lütfen tekrar giriş yapın.');
+      }
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`API Error: ${response.status} - ${errorBody}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`API Request Failed for ${endpoint}:`, error);
+    throw error;
+  }
+};
+
+export const useApi = () => {
   return { fetchWithAuth };
 };
