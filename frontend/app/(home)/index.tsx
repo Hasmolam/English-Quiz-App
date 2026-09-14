@@ -4,14 +4,13 @@ import {
   View,
   Pressable,
   ScrollView,
-  SafeAreaView,
   StyleSheet,
-  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
-import { useApi } from '@/utils/api';
+import { fetchWithAuth } from '@/utils/api';
 import { HeaderHUD } from '@/components/HeaderHUD';
 import { ProgressBar } from '@/components/ProgressBar';
 import { TactileButton } from '@/components/TactileButton';
@@ -22,26 +21,18 @@ interface UserStats {
   level: string;
   rank: number;
   total_players: number;
+  quizzes_completed?: number;
   current_streak?: number;
 }
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user, isAuthenticated, updateUser } = useAuth();
-  const { fetchWithAuth } = useApi();
 
   const [dailyStats, setDailyStats] = useState({ completed: 0, target: 5 });
   const [userStats, setUserStats] = useState<UserStats | null>(null);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (isAuthenticated) {
-        fetchDashboardData();
-      }
-    }, [isAuthenticated])
-  );
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const [progressData, statsData] = await Promise.all([
         fetchWithAuth('/quiz/daily_progress'),
@@ -57,7 +48,15 @@ export default function HomeScreen() {
     } catch (e) {
       console.log('Dashboard fetch error:', e);
     }
-  };
+  }, [user, updateUser]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        fetchDashboardData();
+      }
+    }, [isAuthenticated, fetchDashboardData])
+  );
 
   const questProgress = Math.min(1, dailyStats.completed / (dailyStats.target || 5));
   const isQuestFinished = dailyStats.completed >= dailyStats.target;
@@ -361,7 +360,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: '#15803D',
     gap: 4,
-    cursor: Platform.OS === 'web' ? 'pointer' : undefined,
+    cursor: process.env.EXPO_OS === 'web' ? 'pointer' : undefined,
   },
   miniPlayText: {
     color: '#FFFFFF',
@@ -469,7 +468,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderBottomWidth: 4,
     position: 'relative',
-    cursor: Platform.OS === 'web' ? 'pointer' : undefined,
+    cursor: process.env.EXPO_OS === 'web' ? 'pointer' : undefined,
   },
   leaderboardCard: {
     borderColor: '#FEF3C7',

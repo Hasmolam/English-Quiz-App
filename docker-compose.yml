@@ -1,25 +1,54 @@
-version: '3.8'
-
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: english-quiz-backend
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
-    volumes:
-      - ./backend:/app
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       - SQLMODEL_DATABASE_URL=postgresql://postgres:postgres@db:5432/englishquiz
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-cba5cce128f421d0f1d04306da20e9c0a9c1ab7e9d324ce4b3733964b06c2c7e}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - quiz-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: english-quiz-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - quiz-network
+
+  expo-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: english-quiz-expo-dev
+    stdin_open: true
+    tty: true
+    ports:
+      - "8081:8081"
+    environment:
+      - EXPO_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
     networks:
       - quiz-network
 
   db:
     image: postgres:16-alpine
     container_name: english-quiz-db
+    restart: unless-stopped
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -28,6 +57,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d englishquiz"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
     networks:
       - quiz-network
 

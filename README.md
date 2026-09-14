@@ -1,9 +1,9 @@
 # English Quiz App 🎮 ⚡
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![React Native](https://img.shields.io/badge/React_Native-0.76+-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://reactnative.dev)
-[![Expo](https://img.shields.io/badge/Expo_SDK-54-000020.svg?style=flat&logo=expo&logoColor=white)](https://expo.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-3178C6.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![React Native](https://img.shields.io/badge/React_Native-0.86+-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://reactnative.dev)
+[![Expo](https://img.shields.io/badge/Expo_SDK-57-000020.svg?style=flat&logo=expo&logoColor=white)](https://expo.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0+-3178C6.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![Package Manager: uv](https://img.shields.io/badge/Package_Manager-uv-de5fe9.svg?style=flat&logo=python&logoColor=white)](https://docs.astral.sh/uv/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -178,7 +178,7 @@ englishquizapp/
 ## 🚀 Quick Start Guide
 
 ### Prerequisites
-- **Node.js**: v18.0.0 or higher
+- **Node.js**: v20.0.0 or higher (v22 LTS recommended)
 - **pnpm** (or `npm`)
 - **Python**: v3.12 or higher
 - **Git**
@@ -300,21 +300,51 @@ cd frontend
 
 ---
 
-## 🐳 Containerized Deployment (Docker)
+## 🐳 One-Command Full-Stack Deployment (Docker)
 
-To deploy the backend with PostgreSQL via Docker Compose:
+You can spin up the entire application stack (**PostgreSQL 16**, **FastAPI Backend**, and **Expo Web via Nginx**) with a single command:
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
+
+### Services & Endpoints
+
+| Service | Port (Host) | Description | Health Status |
+| :--- | :--- | :--- | :---: |
+| **Frontend Web** | [`http://localhost:3000`](http://localhost:3000) | Production Expo Web build served by Alpine Nginx | Ready |
+| **Backend API** | [`http://localhost:8000`](http://localhost:8000) | FastAPI with Astral `uv`, auto-seeded vocabulary bank | Ready |
+| **PostgreSQL 16** | `localhost:5432` | Relational database with persistent volume storage | Healthy |
+| **Swagger UI** | [`http://localhost:8000/docs`](http://localhost:8000/docs) | Interactive OpenAPI / Swagger API explorer | Ready |
+
+> [!TIP]
+> The database vocabulary bank is automatically seeded with CEFR vocabulary words (`A1` through `C1`) upon container startup via the FastAPI lifespan hook. No manual seeding command is needed.
+
+To view logs or stop the stack:
+```bash
+# View live logs
+docker compose logs -f
+
+# Shut down all services and keep data volume intact
+docker compose down
+```
+
+### 📱 Running Mobile Metro Server with QR Code (Docker)
+
+To launch the interactive Expo Metro bundler with a live terminal QR code for **Expo Go** or mobile emulators:
+
+```bash
+docker compose run --rm -it expo-dev npx expo start --host lan
+```
+*(or with tunnel mode: `docker compose run --rm -it expo-dev npx expo start --tunnel`)*
 
 ### Production Environment Variables
 
-| Variable | Description | Example |
+| Variable | Description | Default in Docker Compose |
 | :--- | :--- | :--- |
-| `SQLMODEL_DATABASE_URL` | PostgreSQL connection URI | `postgresql://quizuser:secret@postgres:5432/quizdb` |
-| `JWT_SECRET_KEY` | Cryptographically random secret | `openssl rand -hex 32` |
-| `EXPO_PUBLIC_API_URL` | Production API public URL | `https://api.yourdomain.com` |
+| `SQLMODEL_DATABASE_URL` | PostgreSQL connection URI | `postgresql://quizuser:quizpassword@db:5432/quizdb` |
+| `JWT_SECRET_KEY` | Cryptographically random secret | Configured in `docker-compose.yml` |
+| `EXPO_PUBLIC_API_URL` | Frontend API client target | `http://localhost:8000` |
 
 ---
 

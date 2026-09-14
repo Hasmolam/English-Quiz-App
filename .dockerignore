@@ -1,0 +1,10 @@
+**/node_modules
+**/.venv
+**/venv
+**/.expo
+**/dist
+**/.git
+**/.gitignore
+**/*.pyc
+**/*.db
+**/*.sqlite

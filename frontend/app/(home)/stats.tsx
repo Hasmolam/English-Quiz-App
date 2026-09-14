@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,11 @@ import {
   RefreshControl,
   Pressable,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useApi } from '@/utils/api';
+import { fetchWithAuth } from '@/utils/api';
 import { ProgressBar } from '@/components/ProgressBar';
 import { BadgeCard, BadgeData } from '@/components/BadgeCard';
 
@@ -51,25 +50,54 @@ interface UserStats {
 
 export default function StatsScreen() {
   const router = useRouter();
-  const { fetchWithAuth } = useApi();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
+    setError(null);
     try {
       const data = await fetchWithAuth('/quiz/stats');
       setStats(data);
-    } catch (error) {
-      console.error('Stats loading error:', error);
+    } catch (err: unknown) {
+      console.error('Stats loading error:', err);
+      const message = err instanceof Error ? err.message : 'İstatistikler yüklenirken bir sorun oluştu.';
+      setError(message);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadStats();
+    let ignore = false;
+
+    async function initStats() {
+      try {
+        const data = await fetchWithAuth('/quiz/stats');
+        if (!ignore) {
+          setStats(data);
+        }
+      } catch (err: unknown) {
+        console.error('Stats loading error:', err);
+        const message = err instanceof Error ? err.message : 'İstatistikler yüklenirken bir sorun oluştu.';
+        if (!ignore) {
+          setError(message);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    }
+
+    initStats();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const onRefresh = () => {
@@ -86,12 +114,38 @@ export default function StatsScreen() {
     );
   }
 
-  const score = stats?.total_score || 0;
-  const currentRank = stats?.rank || 1;
-  const totalPlayers = stats?.total_players || 1;
-  const userLevel = stats?.level || 'A1';
-  const accuracyRate = stats?.accuracy_rate || 0;
-  const streak = stats?.current_streak || 0;
+  if (!stats || error) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
+          <Text style={styles.errorTitle}>İstatistikler Yüklenemedi</Text>
+          <Text style={styles.errorSubtitle}>
+            {error || 'Veriler alınırken bir sorunla karşılaşıldı.'}
+          </Text>
+          <Pressable
+            style={styles.retryButton}
+            onPress={() => {
+              setLoading(true);
+              loadStats();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Tekrar dene"
+          >
+            <Ionicons name="refresh" size={18} color="#FFFFFF" />
+            <Text style={styles.retryButtonText}>Tekrar Dene</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const score = stats.total_score || 0;
+  const currentRank = stats.rank || 1;
+  const totalPlayers = stats.total_players || 1;
+  const userLevel = stats.level || 'A1';
+  const accuracyRate = stats.accuracy_rate || 0;
+  const streak = stats.current_streak || 0;
 
   // Multi-tier Level Roadmap calculation:
   // A1: 0 - 100 XP
@@ -342,7 +396,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    cursor: Platform.OS === 'web' ? 'pointer' : undefined,
+    cursor: process.env.EXPO_OS === 'web' ? 'pointer' : undefined,
   },
   appBarTitle: {
     fontSize: 18,
@@ -444,6 +498,7 @@ const styles = StyleSheet.create({
     color: '#FDE68A',
     fontSize: 12,
     fontWeight: '900',
+    fontVariant: ['tabular-nums'],
   },
   sectionHeader: {
     fontSize: 17,
@@ -499,6 +554,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '900',
     color: '#0F172A',
+    fontVariant: ['tabular-nums'],
   },
   rankRow: {
     flexDirection: 'row',
@@ -613,8 +669,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
     color: '#B45309',
+    fontVariant: ['tabular-nums'],
   },
   badgesList: {
     marginTop: 4,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  errorSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#4F46E5',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+    borderBottomWidth: 3,
+    borderBottomColor: '#3730A3',
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 15,
   },
 });

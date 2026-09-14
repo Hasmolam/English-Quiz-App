@@ -8,8 +8,10 @@ import {
   ViewStyle,
   TextStyle,
   StyleSheet,
-  Platform,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
+
+import { colors as themeColors, spacing, radius } from '@/theme';
 
 export type TactileVariant = 'primary' | 'success' | 'danger' | 'gold' | 'outline' | 'slate';
 export type TactileSize = 'sm' | 'md' | 'lg';
@@ -37,34 +39,34 @@ const variantStyles: Record<
   }
 > = {
   primary: {
-    bg: '#4F46E5',       // Learning Indigo (Primary token)
-    border: '#3730A3',   // Deep Indigo underside
-    textColor: '#FFFFFF',
+    bg: themeColors.primary,
+    border: themeColors.primaryDark,
+    textColor: themeColors.textOnColor,
   },
   success: {
-    bg: '#16A34A',       // Progress Green (CTA token)
-    border: '#15803D',   // Dark Green underside
-    textColor: '#FFFFFF',
+    bg: themeColors.success,
+    border: themeColors.successDark,
+    textColor: themeColors.textOnColor,
   },
   danger: {
-    bg: '#DC2626',       // Ruby Red (Destructive token)
-    border: '#991B1B',   // Dark Red underside
-    textColor: '#FFFFFF',
+    bg: themeColors.danger,
+    border: themeColors.dangerDark,
+    textColor: themeColors.textOnColor,
   },
   gold: {
-    bg: '#D97706',       // Amber Gold
-    border: '#B45309',   // Dark Amber underside
-    textColor: '#FFFFFF',
+    bg: themeColors.warning,
+    border: themeColors.warningDark,
+    textColor: themeColors.textOnColor,
   },
   outline: {
-    bg: '#FFFFFF',       // Clean White surface
-    border: '#CBD5E1',   // Slate-300 underside
-    textColor: '#0F172A',
+    bg: themeColors.surface,
+    border: themeColors.borderDark,
+    textColor: themeColors.textPrimary,
   },
   slate: {
-    bg: '#334155',       // Slate-700
-    border: '#0F172A',   // Slate-900 underside
-    textColor: '#FFFFFF',
+    bg: themeColors.slate,
+    border: themeColors.slateDark,
+    textColor: themeColors.textOnColor,
   },
 };
 
@@ -79,7 +81,7 @@ const sizeStyles: Record<
   }
 > = {
   sm: {
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     paddingHorizontal: 14,
     fontSize: 13,
     borderBottomWidth: 3,
@@ -94,7 +96,7 @@ const sizeStyles: Record<
   },
   lg: {
     paddingVertical: 18,
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing.lg,
     fontSize: 18,
     borderBottomWidth: 5,
     pressedTranslateY: 5,
@@ -129,13 +131,18 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
       accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityState={{ disabled: !!disabled, busy: !!loading }}
-      onPressIn={() => setIsPressed(true)}
+      onPressIn={() => {
+        setIsPressed(true);
+        if (process.env.EXPO_OS !== 'web' && !disabled && !loading) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+        }
+      }}
       onPressOut={() => setIsPressed(false)}
       style={[
         styles.baseButton,
         {
-          backgroundColor: disabled ? '#94A3B8' : colors.bg,
-          borderBottomColor: disabled ? '#64748B' : colors.border,
+          backgroundColor: disabled ? themeColors.disabled : colors.bg,
+          borderBottomColor: disabled ? themeColors.disabledDark : colors.border,
           borderBottomWidth: currentBorderBottom,
           transform: [{ translateY: currentTranslateY }],
           paddingVertical: dimensions.paddingVertical,
@@ -143,7 +150,7 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
           width: fullWidth ? '100%' : 'auto',
           opacity: disabled ? 0.65 : 1,
           minHeight: 48,
-          cursor: Platform.OS === 'web' && (!disabled && !loading) ? 'pointer' : undefined,
+          cursor: process.env.EXPO_OS === 'web' && (!disabled && !loading) ? 'pointer' : undefined,
         },
         style,
       ]}
@@ -176,7 +183,8 @@ export const TactileButton: React.FC<TactileButtonProps> = ({
 
 const styles = StyleSheet.create({
   baseButton: {
-    borderRadius: 16,
+    borderRadius: radius.lg,
+    borderCurve: 'continuous',
     justifyContent: 'center',
     alignItems: 'center',
   },

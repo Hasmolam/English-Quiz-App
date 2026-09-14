@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 
@@ -17,11 +17,16 @@ export const SignOutButton = () => {
   };
 
   return (
-    <TouchableOpacity
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Oturumu kapat ve çıkış yap"
       onPress={handleSignOut}
-      className="bg-red-50 px-4 py-2 rounded-xl border border-red-200 active:opacity-75"
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.75 : 1,
+      })}
+      className="bg-red-50 px-4 py-2 rounded-xl border border-red-200"
     >
       <Text className="text-red-600 font-semibold text-sm">Çıkış Yap</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };

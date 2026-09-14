@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'expo-router';
+
+import { colors, spacing, radius } from '@/theme';
 
 interface HeaderHUDProps {
   streak?: number;
@@ -50,8 +51,8 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
         accessibilityRole="summary"
         accessibilityLabel={`Günlük seri: ${streak} gün`}
       >
-        <Ionicons name="flame" size={20} color="#EA580C" />
-        <Text style={[styles.pillValue, { color: '#EA580C' }]}>{streak}</Text>
+        <Ionicons name="flame" size={20} color={colors.streak} />
+        <Text style={[styles.pillValue, { color: colors.streak }]}>{streak}</Text>
       </View>
 
       {/* 3. XP Star Pill */}
@@ -61,8 +62,8 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
         accessibilityRole="summary"
         accessibilityLabel={`Toplam tecrübe: ${totalXP} XP`}
       >
-        <Ionicons name="flash" size={18} color="#D97706" />
-        <Text style={[styles.pillValue, { color: '#D97706' }]}>{totalXP}</Text>
+        <Ionicons name="flash" size={18} color={colors.warning} />
+        <Text style={[styles.pillValue, { color: colors.warning }]}>{totalXP}</Text>
       </View>
 
       {/* 4. Lives / Hearts Pill */}
@@ -72,8 +73,8 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
         accessibilityRole="summary"
         accessibilityLabel={`Kalan can: ${lives}`}
       >
-        <Ionicons name="heart" size={18} color="#DC2626" />
-        <Text style={[styles.pillValue, { color: '#DC2626' }]}>
+        <Ionicons name="heart" size={18} color={colors.danger} />
+        <Text style={[styles.pillValue, { color: colors.danger }]}>
           {lives}
         </Text>
       </View>
@@ -86,56 +87,58 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 2,
-    borderBottomColor: '#E2E8F0',
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1.5,
+    borderBottomColor: colors.border,
   },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 20,
-    gap: 4,
-    cursor: Platform.OS === 'web' ? 'pointer' : undefined,
+    borderRadius: radius.xl,
+    gap: spacing.xs,
+    cursor: process.env.EXPO_OS === 'web' ? 'pointer' : undefined,
   },
   levelBadge: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 8,
+    borderRadius: radius.sm,
     marginRight: 2,
   },
   levelBadgeText: {
-    color: '#FFFFFF',
+    color: colors.textOnColor,
     fontWeight: '900',
     fontSize: 11,
+    fontVariant: ['tabular-nums'],
   },
   pillLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#334155',
+    color: colors.textSecondary,
     maxWidth: 90,
   },
   pillValue: {
     fontSize: 14,
     fontWeight: '900',
+    fontVariant: ['tabular-nums'],
   },
   streakPill: {
     borderColor: '#FED7AA',
-    backgroundColor: '#FFF7ED',
+    backgroundColor: colors.streakLight,
   },
   xpPill: {
     borderColor: '#FDE68A',
-    backgroundColor: '#FEFCE8',
+    backgroundColor: colors.warningLight,
   },
   livesPill: {
     borderColor: '#FECDD3',
-    backgroundColor: '#FFF1F2',
+    backgroundColor: colors.dangerLight,
   },
 });

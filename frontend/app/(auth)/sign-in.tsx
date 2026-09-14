@@ -2,13 +2,11 @@ import * as React from 'react';
 import {
   Text,
   TextInput,
-  TouchableOpacity,
   Pressable,
   View,
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -48,7 +46,7 @@ export default function SignInScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={process.env.EXPO_OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -88,6 +86,8 @@ export default function SignInScreen() {
                 <TextInput
                   autoCapitalize="none"
                   autoCorrect={false}
+                  autoComplete="username"
+                  textContentType="username"
                   value={identifier}
                   placeholder="ornek@email.com veya kullanici"
                   placeholderTextColor="#94A3B8"
@@ -106,6 +106,10 @@ export default function SignInScreen() {
               <View style={styles.inputWrapper}>
                 <Ionicons name="lock-closed-outline" size={20} color="#64748B" style={styles.inputIcon} />
                 <TextInput
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="current-password"
+                  textContentType="password"
                   value={password}
                   placeholder="••••••••"
                   placeholderTextColor="#94A3B8"
@@ -116,16 +120,18 @@ export default function SignInScreen() {
                   }}
                   style={styles.input}
                 />
-                <TouchableOpacity
+                <Pressable
                   onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeButton}
+                  style={({ pressed }) => [styles.eyeButton, { opacity: pressed ? 0.6 : 1 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
                 >
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={20}
                     color="#64748B"
                   />
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
 
